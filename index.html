@@ -1,1 +1,2294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Aula 11 — Quando o povo cortou a cabeça do rei</title>
+<style>
+  :root {
+    --bg: #F4EFE6;
+    --bg-deep: #1A1814;
+    --ink: #1A1814;
+    --ink-soft: #4A4640;
+    --paper: #FBF7EF;
+    --accent: #B5342B;
+    --accent-soft: #E89A8F;
+    --accent-2: #1E3A5F;
+    --gold: #B8862F;
+    --line: rgba(26,24,20,0.12);
+    --correct: #2E7D4F;
+    --wrong: #B5342B;
+    --serif: Georgia, 'Times New Roman', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
 
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+
+  .app {
+    position: fixed;
+    inset: 0;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+
+  .progress {
+    position: absolute;
+    top: 10px; left: 12px; right: 12px;
+    height: 18px;
+    display: flex;
+    gap: 2px;
+    z-index: 50;
+    align-items: center;
+    cursor: pointer;
+  }
+  .seg {
+    flex: 1;
+    height: 3px;
+    background: rgba(26,24,20,0.12);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+    transition: height 0.2s ease;
+  }
+  .seg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .seg.done::after { transform: scaleX(1); }
+  .seg.current::after { transform: scaleX(1); }
+  .seg.current { height: 4px; }
+
+
+  .header {
+    position: absolute;
+    top: 34px; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 40;
+    pointer-events: none;
+  }
+  .header span {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+
+
+  .slides { position: absolute; inset: 0; }
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 80px 28px 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+    overflow-y: auto;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+  .slide.prev { transform: translateX(-40px); }
+
+
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(28px, 8vw, 38px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  h1 em, h2 em {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(24px, 7vw, 32px);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin-bottom: 14px;
+  }
+  h3 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 20px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+  p {
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-weight: 400;
+  }
+  p + p { margin-top: 14px; }
+  .big {
+    font-family: var(--serif);
+    font-size: clamp(22px, 6.5vw, 28px);
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .quote {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.35;
+    color: var(--ink);
+    border-left: 2px solid var(--accent);
+    padding-left: 18px;
+    margin: 8px 0;
+  }
+  .number {
+    font-family: var(--serif);
+    font-size: 88px;
+    font-weight: 800;
+    line-height: 0.9;
+    color: var(--accent);
+    letter-spacing: -0.04em;
+  }
+  .label {
+    font-family: var(--sans);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+
+  .slide.active > * {
+    animation: fadeUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+  }
+  .slide.active > *:nth-child(1) { animation-delay: 0.05s; }
+  .slide.active > *:nth-child(2) { animation-delay: 0.18s; }
+  .slide.active > *:nth-child(3) { animation-delay: 0.31s; }
+  .slide.active > *:nth-child(4) { animation-delay: 0.44s; }
+  .slide.active > *:nth-child(5) { animation-delay: 0.57s; }
+  .slide.active > *:nth-child(6) { animation-delay: 0.70s; }
+  .slide.active > *:nth-child(7) { animation-delay: 0.83s; }
+
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+
+  .tap-zone {
+    position: absolute;
+    top: 60px; bottom: 0;
+    width: 35%;
+    z-index: 30;
+    cursor: pointer;
+  }
+  .tap-zone.left { left: 0; }
+  .tap-zone.right { right: 0; }
+
+
+  .footer-hint {
+    position: absolute;
+    bottom: 18px; left: 0; right: 0;
+    text-align: center;
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    opacity: 0.6;
+    z-index: 20;
+    pointer-events: none;
+  }
+  .footer-hint .arrow {
+    display: inline-block;
+    animation: nudge 2s ease-in-out infinite;
+  }
+  @keyframes nudge {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(4px); }
+  }
+
+
+  .illu {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto 18px;
+    display: block;
+  }
+  .illu.sm { max-width: 180px; }
+  .illu.lg { max-width: 320px; }
+  .illu svg { width: 100%; height: auto; display: block; }
+
+
+  .draw path, .draw line, .draw circle, .draw rect, .draw polygon, .draw polyline {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: draw 1.6s 0.3s cubic-bezier(0.5, 0, 0.2, 1) forwards;
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+
+  .pulse-dot { animation: pulseDot 1.8s ease-in-out infinite; }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+
+
+  .cover {
+    background: var(--bg-deep);
+    color: var(--paper);
+  }
+  .cover h1 { color: var(--paper); }
+  .cover .eyebrow { color: var(--accent-soft); }
+  .cover p { color: rgba(251,247,239,0.7); }
+  .cover .footer-hint { color: rgba(251,247,239,0.5); }
+
+
+  .quiz-intro { text-align: center; }
+  .quiz-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--paper);
+    animation: popIn 0.6s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+
+  .question-num {
+    font-family: var(--sans);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .question {
+    font-family: var(--serif);
+    font-size: 22px;
+    line-height: 1.3;
+    font-weight: 600;
+    margin-bottom: 24px;
+    letter-spacing: -0.01em;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .option:active { transform: scale(0.98); }
+  .option .letter {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 1px;
+    transition: all 0.2s ease;
+  }
+  .option.correct {
+    background: rgba(46, 125, 79, 0.08);
+    border-color: var(--correct);
+    color: var(--correct);
+  }
+  .option.correct .letter {
+    background: var(--correct);
+    color: white;
+    border-color: var(--correct);
+  }
+  .option.wrong {
+    background: rgba(181, 52, 43, 0.06);
+    border-color: var(--wrong);
+    color: var(--wrong);
+  }
+  .option.wrong .letter {
+    background: var(--wrong);
+    color: white;
+    border-color: var(--wrong);
+  }
+  .option.disabled { pointer-events: none; opacity: 0.55; }
+
+
+  .feedback {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 12px;
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+  .feedback.show {
+    opacity: 1;
+    max-height: 500px;
+  }
+  .feedback.right {
+    background: rgba(46, 125, 79, 0.08);
+    color: var(--correct);
+    border: 1px solid rgba(46, 125, 79, 0.2);
+  }
+  .feedback.miss {
+    background: rgba(181, 52, 43, 0.06);
+    color: var(--ink);
+    border: 1px solid rgba(181, 52, 43, 0.2);
+  }
+  .feedback strong { font-weight: 700; }
+  .feedback .head {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 16px;
+    margin-bottom: 6px;
+    display: block;
+    font-weight: 600;
+  }
+
+
+  .end {
+    background: var(--bg-deep);
+    color: var(--paper);
+    text-align: center;
+  }
+  .end h2 { color: var(--paper); }
+  .end p { color: rgba(251,247,239,0.7); }
+  .end .score {
+    font-family: var(--serif);
+    font-size: 72px;
+    font-weight: 800;
+    color: var(--accent-soft);
+    line-height: 1;
+    margin: 20px 0;
+  }
+  .restart {
+    margin-top: 28px;
+    background: var(--accent);
+    color: var(--paper);
+    border: none;
+    padding: 14px 28px;
+    border-radius: 100px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .restart:active { transform: scale(0.96); }
+
+
+  .slide::-webkit-scrollbar { display: none; }
+  .slide { scrollbar-width: none; }
+
+
+  .card-soft {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+  }
+  .stamp {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+  .stamp.dark {
+    background: var(--bg-deep);
+    color: var(--accent-soft);
+  }
+  .stamp.gold {
+    background: var(--gold);
+    color: var(--paper);
+  }
+  .stamp.blue {
+    background: var(--accent-2);
+    color: var(--paper);
+  }
+
+
+  .estate-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  .estate-row {
+    background: var(--paper);
+    border-radius: 10px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .estate-row .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .estate-row .name {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .estate-row .pct {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .estate-row .sub {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+
+  .phase-card {
+    background: var(--paper);
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+  }
+  .phase-card .ph-num {
+    font-family: var(--serif);
+    font-weight: 800;
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 0.05em;
+  }
+  .phase-card .ph-title {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .phase-card .ph-years {
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+
+  .blood-drop {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin: 0 2px;
+  }
+
+
+  .flag-stripes {
+    display: flex;
+    height: 38px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 14px auto;
+    max-width: 220px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .flag-stripes div { flex: 1; }
+  .flag-stripes .b { background: var(--accent-2); }
+  .flag-stripes .w { background: var(--paper); }
+  .flag-stripes .r { background: var(--accent); }
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <div class="progress" id="progress"></div>
+  <div class="header">
+    <span>Aula 11</span>
+    <span id="counter">1 / 1</span>
+  </div>
+
+
+  <div class="slides" id="slides">
+
+
+    <!-- ============== 1 — CAPA ============== -->
+    <section class="slide cover active">
+      <div class="eyebrow">História · Aula 11</div>
+      <h1>Quando o povo cortou a <em>cabeça</em> do rei.</h1>
+      <p style="margin-top: 16px;">A Revolução Francesa. E o nascimento — no sangue — do mundo moderno.</p>
+      <div class="illu" style="margin-top: 32px; max-width: 220px;">
+        <svg viewBox="0 0 220 180" class="draw" fill="none" stroke="#E89A8F" stroke-width="1.5">
+          <!-- guilhotina -->
+          <path d="M40 170 L40 30"/>
+          <path d="M180 170 L180 30"/>
+          <path d="M30 30 L190 30"/>
+          <path d="M40 30 L180 30"/>
+          <!-- lâmina -->
+          <path d="M60 50 L160 50 L160 80 L60 80 Z" fill="#E89A8F" fill-opacity="0.3"/>
+          <path d="M60 80 L110 95 L160 80"/>
+          <!-- base -->
+          <path d="M20 170 L200 170"/>
+          <!-- meia-lua / cesto -->
+          <path d="M85 140 L135 140 L130 160 L90 160 Z"/>
+        </svg>
+      </div>
+      <div class="footer-hint">toque na lateral pra avançar <span class="arrow">→</span></div>
+    </section>
+
+
+    <!-- ============== 2 ============== -->
+    <section class="slide">
+      <p class="big">Oi.</p>
+      <p style="margin-top: 18px;">Hoje a gente vai falar do evento mais dramático, sangrento e cinematográfico da história moderna.</p>
+      <p class="big" style="margin-top: 14px; color: var(--accent);">A Revolução Francesa.</p>
+    </section>
+
+
+    <!-- ============== 3 — gancho ============== -->
+    <section class="slide">
+      <p>E olha, vou ser honesto:</p>
+      <p class="big" style="margin-top: 12px;">Eu adoro essa história.</p>
+      <p style="margin-top: 14px;">Porque tem tudo.</p>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px;">
+        <p style="color: var(--ink-soft); font-style: italic;">Rei burro.</p>
+        <p style="color: var(--ink-soft); font-style: italic;">Rainha fútil.</p>
+        <p style="color: var(--ink-soft); font-style: italic;">Fome, motim, traição.</p>
+        <p style="color: var(--ink-soft); font-style: italic;">Guilhotina, ditadura, guerra.</p>
+        <p style="color: var(--ink-soft); font-style: italic;">E um general baixinho que vira imperador.</p>
+      </div>
+      <p class="big" style="margin-top: 14px;">Parece série da Netflix. Não é.</p>
+    </section>
+
+
+    <!-- ============== 4 ============== -->
+    <section class="slide">
+      <p>Mas o mais importante:</p>
+      <p style="margin-top: 12px;">A Revolução Francesa <strong>não foi só espetáculo</strong>.</p>
+      <p class="big" style="margin-top: 14px;">Foi o evento que destruiu, em <em>10 anos</em>, uma estrutura que durou mais de <em>mil anos</em>.</p>
+      <p style="margin-top: 14px;">E inventou, na marra, a base do mundo político em que a gente vive.</p>
+    </section>
+
+
+    <!-- ============== 5 — marco da Idade Contemporânea ============== -->
+    <section class="slide">
+      <div class="eyebrow">Marco zero</div>
+      <p>A historiografia considera que a <strong>Idade Contemporânea</strong> começa em:</p>
+      <div class="number" style="margin-top: 16px; text-align: center;">1789</div>
+      <p style="margin-top: 16px;">Por quê? Porque é o evento que separa, formalmente, <strong>o mundo antigo do mundo moderno</strong>.</p>
+      <div style="margin-top: 16px; display: flex; gap: 8px;">
+        <div style="flex: 1; padding: 12px; background: var(--paper); border-radius: 10px; text-align: center;">
+          <div class="label" style="font-size: 10px;">Antes</div>
+          <p style="font-family: var(--serif); font-size: 14px; margin-top: 4px;">Antigo Regime</p>
+        </div>
+        <div style="flex: 1; padding: 12px; background: var(--bg-deep); color: var(--paper); border-radius: 10px; text-align: center;">
+     <div class="label" style="font-size: 10px; color: var(--accent-soft);">Depois</div>
+<p style="font-family: var(--serif); font-size: 14px; margin-top: 4px; color: white;">Mundo dos cidadãos</p>
+</div>
+</div>
+</section>
+
+
+    <!-- ============== 6 — cenário ============== -->
+    <section class="slide">
+      <div class="eyebrow">Vamos por partes</div>
+      <h2>O cenário. França, <em>1789</em>.</h2>
+      <div class="illu" style="margin-top: 18px; max-width: 240px;">
+        <svg viewBox="0 0 240 140" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- Versalhes / palácio -->
+          <path d="M40 110 L200 110"/>
+          <path d="M50 110 L50 70 M70 110 L70 70 M90 110 L90 70 M150 110 L150 70 M170 110 L170 70 M190 110 L190 70"/>
+          <path d="M40 70 L200 70"/>
+          <path d="M40 70 L120 30 L200 70"/>
+          <!-- relógio do palácio -->
+          <circle cx="120" cy="55" r="6"/>
+          <path d="M120 55 L120 51 M120 55 L123 57"/>
+          <!-- janelas -->
+          <rect x="105" y="80" width="30" height="25"/>
+        </svg>
+      </div>
+      <p>O país mais populoso da Europa Ocidental.</p>
+      <p style="margin-top: 8px;"><strong>25 milhões</strong> de habitantes. Inglaterra tinha 8.</p>
+      <p style="margin-top: 8px;">Centro cultural do mundo. Falar francês era sinal de elegância em qualquer corte.</p>
+    </section>
+
+
+    <!-- ============== 7 ============== -->
+    <section class="slide">
+      <p class="big">Mas por trás do brilho…</p>
+      <p style="margin-top: 16px; font-family: var(--serif); font-style: italic; font-size: 24px; color: var(--accent);">…tinha podridão.</p>
+      <p style="margin-top: 14px;">Muita podridão.</p>
+    </section>
+
+
+    <!-- ============== 8 — os 3 estados (intro) ============== -->
+    <section class="slide">
+      <div class="eyebrow">Sociedade francesa</div>
+      <p>Era dividida em <strong>três grupos</strong>.</p>
+      <p style="margin-top: 8px;">Chamados de <em>"estados"</em>. Não no sentido de país. No sentido de <strong>casta</strong>. Classe social fechada.</p>
+      <div class="illu" style="margin-top: 18px; max-width: 240px;">
+        <svg viewBox="0 0 240 120" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- pirâmide social -->
+          <path d="M120 15 L100 50 L140 50 Z"/>
+          <text x="113" y="40" font-family="Georgia" font-size="9" fill="#B5342B" stroke="none">1º</text>
+          <path d="M100 50 L80 80 L160 80 L140 50 Z"/>
+          <text x="113" y="70" font-family="Georgia" font-size="9" fill="#B5342B" stroke="none">2º</text>
+          <path d="M80 80 L50 115 L190 115 L160 80 Z"/>
+          <text x="113" y="102" font-family="Georgia" font-size="11" fill="#B5342B" stroke="none">3º</text>
+        </svg>
+      </div>
+    </section>
+
+
+    <!-- ============== 9 — 1º Estado ============== -->
+    <section class="slide">
+      <span class="stamp">1º Estado</span>
+      <h2 style="margin-top: 14px;">O clero.</h2>
+      <div class="illu sm" style="margin: 16px auto;">
+        <svg viewBox="0 0 100 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- igreja -->
+          <path d="M30 70 L30 40 L50 25 L70 40 L70 70 Z"/>
+          <path d="M50 10 L50 25"/>
+          <path d="M45 18 L55 18"/>
+          <rect x="45" y="50" width="10" height="20"/>
+        </svg>
+      </div>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px;">
+          <span class="label" style="font-size: 10px;">Tamanho</span>
+          <p style="font-size: 15px;">150 mil pessoas. Padres, bispos, monges, freiras.</p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px;">
+          <span class="label" style="font-size: 10px;">Privilégios</span>
+          <p style="font-size: 15px;">Praticamente <strong>não pagavam imposto</strong>.</p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <span class="label" style="font-size: 10px;">Posse de terra</span>
+          <p style="font-size: 15px;"><strong>10%</strong> de toda a terra da França.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============== 10 — 2º Estado ============== -->
+    <section class="slide">
+      <span class="stamp">2º Estado</span>
+      <h2 style="margin-top: 14px;">A nobreza.</h2>
+      <div class="illu sm" style="margin: 16px auto;">
+        <svg viewBox="0 0 100 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- coroa -->
+          <path d="M25 55 L25 30 L40 45 L50 25 L60 45 L75 30 L75 55 Z"/>
+          <path d="M25 60 L75 60"/>
+          <circle cx="40" cy="42" r="2" fill="#B5342B"/>
+          <circle cx="50" cy="32" r="2" fill="#B5342B"/>
+          <circle cx="60" cy="42" r="2" fill="#B5342B"/>
+        </svg>
+      </div>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px;">
+          <span class="label" style="font-size: 10px;">Tamanho</span>
+          <p style="font-size: 15px;">400 mil. Duques, condes, marqueses, barões.</p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px;">
+          <span class="label" style="font-size: 10px;">Privilégios</span>
+          <p style="font-size: 15px;">Também <strong>não pagavam imposto</strong>. Monopólio dos cargos altos.</p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <span class="label" style="font-size: 10px;">Posse de terra</span>
+          <p style="font-size: 15px;"><strong>25%</strong> da terra.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============== 11 — 3º Estado ============== -->
+    <section class="slide">
+      <span class="stamp">3º Estado</span>
+      <h2 style="margin-top: 14px;">Todo o resto.</h2>
+      <div class="illu sm" style="margin: 16px auto;">
+        <svg viewBox="0 0 140 60" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <circle cx="15" cy="30" r="4"/>
+          <circle cx="30" cy="30" r="4"/>
+          <circle cx="45" cy="30" r="4"/>
+          <circle cx="60" cy="30" r="4"/>
+          <circle cx="75" cy="30" r="4"/>
+          <circle cx="90" cy="30" r="4"/>
+          <circle cx="105" cy="30" r="4"/>
+          <circle cx="120" cy="30" r="4"/>
+          <text x="125" y="34" font-family="Georgia" font-size="9" fill="#B5342B" stroke="none">…</text>
+        </svg>
+      </div>
+      <p><strong>25 milhões</strong> de pessoas.</p>
+      <p style="margin-top: 6px;">Camponeses, artesãos, comerciantes, burgueses ricos, mendigos. Todo mundo que não era nobre nem padre.</p>
+    </section>
+
+
+    <!-- ============== 12 — a conta ============== -->
+    <section class="slide">
+      <p class="big">Faz a conta.</p>
+      <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="padding: 14px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--gold);">
+          <div class="number" style="font-size: 44px; color: var(--gold);">2%</div>
+          <p style="font-size: 14px; margin-top: 4px;">tinham praticamente todos os privilégios.</p>
+        </div>
+        <div style="padding: 14px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <div class="number" style="font-size: 44px;">98%</div>
+          <p style="font-size: 14px; margin-top: 4px;">pagavam <strong>toda</strong> a conta.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============== 13 — triplo imposto ============== -->
+    <section class="slide">
+      <p>E pra piorar.</p>
+      <p style="margin-top: 12px;">Dentro do 3º Estado, tinha uma diferença gigante.</p>
+      <p style="margin-top: 14px;">O <strong>burguês rico</strong> tinha mais dinheiro que muito nobre. Mas era cidadão de segunda. Sem sangue azul.</p>
+      <p style="margin-top: 12px;">E o <strong>camponês</strong>?</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Pagava imposto pro rei.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Pagava dízimo pra Igreja.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Pagava taxa pro nobre dono da terra.</div>
+      </div>
+      <p class="big" style="margin-top: 14px; color: var(--accent);">Triplo imposto.</p>
+    </section>
+
+
+    <!-- ============== 14 ============== -->
+    <section class="slide">
+      <p>E muitos viviam, literalmente, <strong>à beira da fome</strong>.</p>
+      <p class="quote" style="margin-top: 18px;">Esse é o famoso Antigo Regime. Monarquia absolutista no topo, três estados embaixo, privilégios pra dois deles, e o terceiro segurando o país nas costas.</p>
+      <p style="margin-top: 14px;">Foi assim por séculos.</p>
+    </section>
+
+
+    <!-- ============== 15 — por que desmorona? ============== -->
+    <section class="slide">
+      <div class="eyebrow">A pergunta</div>
+      <h2>Por que isso desmoronou em <em>1789</em>?</h2>
+      <p style="margin-top: 14px;">Porque tinha <strong>quatro fatores</strong> se acumulando.</p>
+      <p style="margin-top: 10px; color: var(--ink-soft); font-style: italic;">Olha um por um.</p>
+    </section>
+
+
+    <!-- ============== 16 — Fator 1 ============== -->
+    <section class="slide">
+      <div class="number">01</div>
+      <div class="label" style="margin-top: 6px;">Primeiro fator</div>
+      <h2 style="margin-top: 10px;">Crise financeira.</h2>
+      <div class="illu sm" style="margin: 14px auto;">
+        <svg viewBox="0 0 120 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- cofre vazio rachado -->
+          <rect x="20" y="20" width="80" height="50" rx="3"/>
+          <circle cx="60" cy="45" r="8"/>
+          <path d="M60 45 L60 35"/>
+          <path d="M40 20 L45 10 L75 10 L80 20"/>
+          <!-- rachadura -->
+          <path d="M30 25 L35 40 L25 55 L33 68"/>
+        </svg>
+      </div>
+      <p>A França tava <strong>quebrada</strong>. Mas quebrada mesmo.</p>
+      <p style="margin-top: 10px;">Motivo principal? <strong>Guerras</strong>. A monarquia gastou fortunas em guerras na Europa e nas colônias.</p>
+    </section>
+
+
+    <!-- ============== 17 — ironia americana ============== -->
+    <section class="slide">
+      <div class="eyebrow">A ironia</div>
+      <p>Um dos motivos da falência foi o seguinte:</p>
+      <p style="margin-top: 12px;">A França <strong>financiou a Revolução Americana</strong> pra prejudicar a Inglaterra, sua inimiga.</p>
+      <p style="margin-top: 10px;">Mandou dinheiro, soldado, armas pros americanos.</p>
+      <div style="margin-top: 14px; padding: 14px; background: var(--paper); border-radius: 12px; border-left: 3px solid var(--gold);">
+        <p style="font-size: 15px;">Os americanos venceram.</p>
+        <p style="font-size: 15px; margin-top: 6px;">A França <strong>quebrou</strong>.</p>
+      </div>
+    </section>
+
+
+    <!-- ============== 18 ============== -->
+    <section class="slide">
+      <p>E tem mais.</p>
+      <p style="margin-top: 12px;">Os soldados franceses que voltaram dos EUA…</p>
+      <p class="big" style="margin-top: 14px;">…voltaram com a cabeça cheia.</p>
+      <p style="margin-top: 14px;">De ideias de <strong>independência</strong>. <strong>Liberdade</strong>. <strong>República</strong>.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--accent);">Voltaram contaminados.</p>
+    </section>
+
+
+    <!-- ============== 19 — Fator 2 ============== -->
+    <section class="slide">
+      <div class="number">02</div>
+      <div class="label" style="margin-top: 6px;">Segundo fator</div>
+      <h2 style="margin-top: 10px;">Crise de fome.</h2>
+      <div class="illu sm" style="margin: 14px auto;">
+        <svg viewBox="0 0 120 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- pão e floco de neve -->
+          <ellipse cx="40" cy="50" rx="22" ry="14"/>
+          <path d="M28 45 L52 45 M30 55 L50 55"/>
+          <!-- neve -->
+          <path d="M85 25 L85 55 M75 30 L95 50 M75 50 L95 30 M70 40 L100 40"/>
+        </svg>
+      </div>
+      <p>O inverno de 1788 pra 89 foi um dos <strong>piores</strong> da história europeia.</p>
+      <p style="margin-top: 10px;">Colheitas? Desastre.</p>
+      <p style="margin-top: 8px;">O preço do <strong>pão</strong> — alimento básico do francês pobre — disparou.</p>
+    </section>
+
+
+    <!-- ============== 20 ============== -->
+    <section class="slide">
+      <p>Em Paris, julho de 1789:</p>
+      <div style="margin: 18px 0; padding: 18px; background: var(--paper); border-radius: 12px; text-align: center; border: 1px solid var(--line);">
+        <div class="number" style="font-size: 56px;">90%</div>
+        <p style="font-size: 14px; margin-top: 6px;">do salário de um operário ia só pra <strong>comprar pão</strong>.</p>
+      </div>
+      <p>Pra família. Sem mais nada.</p>
+      <p style="margin-top: 12px;">Imagina. Você com fome. Sua família com fome.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent);">E vê, ao mesmo tempo, a nobreza fazendo festa em Versalhes.</p>
+    </section>
+
+
+    <!-- ============== 21 — Fator 3 ============== -->
+    <section class="slide">
+      <div class="number">03</div>
+      <div class="label" style="margin-top: 6px;">Terceiro fator</div>
+      <h2 style="margin-top: 10px;">Iluminismo.</h2>
+      <div class="illu sm" style="margin: 14px auto;">
+        <svg viewBox="0 0 100 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- livro com luz -->
+          <path d="M20 60 L20 25 L50 30 L80 25 L80 60 L50 65 Z"/>
+          <path d="M50 30 L50 65"/>
+          <!-- raios -->
+          <path d="M50 18 L50 8 M40 22 L33 14 M60 22 L67 14"/>
+        </svg>
+      </div>
+      <p>Lembra da Aula 10? Locke, Voltaire, Rousseau, Montesquieu.</p>
+      <p style="margin-top: 10px;">Durante <strong>70 anos</strong>, esses caras martelaram a cabeça da Europa com ideias novas.</p>
+    </section>
+
+
+    <!-- ============== 22 ============== -->
+    <section class="slide">
+      <p>Ideias tipo:</p>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 15px; font-family: var(--serif);">Direitos naturais.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 15px; font-family: var(--serif);">Contrato social.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 15px; font-family: var(--serif);">Liberdade.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 15px; font-family: var(--serif);">Igualdade.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 15px; font-family: var(--serif);">Soberania popular.</div>
+      </div>
+      <p style="margin-top: 14px;">A burguesia francesa leu <strong>tudo</strong>. Tinha o cérebro armado.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent);">Faltava só a oportunidade.</p>
+    </section>
+
+
+    <!-- ============== 23 — Fator 4 ============== -->
+    <section class="slide">
+      <div class="number">04</div>
+      <div class="label" style="margin-top: 6px;">Quarto fator</div>
+      <h2 style="margin-top: 10px;">Rei fraco.</h2>
+      <div class="illu sm" style="margin: 14px auto;">
+        <svg viewBox="0 0 100 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- coroa torta -->
+          <path d="M30 50 L30 30 L42 42 L50 25 L58 42 L70 30 L70 50 Z"/>
+          <path d="M30 55 L70 55"/>
+          <!-- relógio (hobby do Luís) -->
+          <circle cx="50" cy="68" r="8"/>
+          <path d="M50 68 L50 63 M50 68 L54 70"/>
+        </svg>
+      </div>
+      <p><strong>Luís XVI</strong> subiu ao trono em 1774.</p>
+      <p style="margin-top: 10px;">Não era malvado. Era <strong>medíocre</strong>.</p>
+      <p style="margin-top: 8px; color: var(--ink-soft); font-style: italic;">Indeciso, inseguro, sem visão.</p>
+    </section>
+
+
+    <!-- ============== 24 ============== -->
+    <section class="slide">
+      <p class="quote">Gostava mais de fazer relógio na oficina dele do que de governar.</p>
+      <p style="margin-top: 14px;">E casado com <strong>Maria Antonieta</strong>. Austríaca.</p>
+      <p style="margin-top: 8px;">Que ganhou fama, justa ou injusta, de <em>fútil, gastadora e desconectada da realidade</em>.</p>
+    </section>
+
+
+    <!-- ============== 25 — frase da Maria Antonieta ============== -->
+    <section class="slide">
+      <div class="eyebrow">A frase famosa</div>
+      <p>Dizem que, quando avisaram pra ela que o povo não tinha pão, ela respondeu:</p>
+      <p class="quote" style="margin-top: 16px; font-size: 24px;">"Então que comam brioche."</p>
+      <p style="margin-top: 14px;">Provavelmente <strong>não disse</strong>.</p>
+      <p style="margin-top: 8px;">Mas a frase colar nela já mostra a imagem que a rainha tinha.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent);">De alguém que vivia em outro planeta.</p>
+    </section>
+
+
+    <!-- ============== 26 — combustível ============== -->
+    <section class="slide">
+      <p class="big">Junta tudo.</p>
+      <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 12px 14px; background: var(--paper); border-radius: 10px; font-size: 15px;">🔸 País quebrado.</div>
+        <div style="padding: 12px 14px; background: var(--paper); border-radius: 10px; font-size: 15px;">🔸 Povo com fome.</div>
+        <div style="padding: 12px 14px; background: var(--paper); border-radius: 10px; font-size: 15px;">🔸 Ideias revolucionárias circulando.</div>
+        <div style="padding: 12px 14px; background: var(--paper); border-radius: 10px; font-size: 15px;">🔸 Rei fraco.</div>
+      </div>
+      <p style="margin-top: 14px;">Tem combustível. Tem oxigênio. Tem palha seca.</p>
+      <p class="big" style="margin-top: 12px; color: var(--accent);">Falta só uma faísca.</p>
+    </section>
+
+
+    <!-- ============== 27 — a faísca ============== -->
+    <section class="slide">
+      <div class="eyebrow">A faísca</div>
+      <p>O rei, pra tentar resolver a crise, teve uma ideia.</p>
+      <p class="big" style="margin-top: 14px;">"Vou cobrar imposto da nobreza e do clero."</p>
+      <p style="margin-top: 14px;">Coisa que nunca tinha sido feita.</p>
+      <p style="margin-top: 8px;">A nobreza <strong>surtou</strong>.</p>
+    </section>
+
+
+    <!-- ============== 28 ============== -->
+    <section class="slide">
+      <p>Disseram que não. Que pra cobrar imposto deles, o rei tinha que convocar uma assembleia antiga.</p>
+      <p class="big" style="margin-top: 14px;">Os <em>Estados Gerais</em>.</p>
+      <p style="margin-top: 14px;">Que reunia representantes dos três estados.</p>
+      <div style="margin-top: 14px; padding: 14px; background: var(--paper); border-radius: 12px; border-left: 3px solid var(--accent);">
+        <p style="font-size: 14px;">Essa assembleia <strong>não se reunia desde 1614</strong>.</p>
+        <p style="font-size: 14px; margin-top: 4px;">175 anos antes. Tava esquecida.</p>
+      </div>
+      <p style="margin-top: 14px;">Mas o rei, sem alternativa, convocou. Maio de 1789. Versalhes.</p>
+    </section>
+
+
+    <!-- ============== 29 — o jogo começa ============== -->
+    <section class="slide">
+      <p class="big">E aqui começou o jogo.</p>
+      <p style="margin-top: 16px;">Os representantes do 3º Estado — burgueses educados, leitores de Voltaire — perceberam uma coisa:</p>
+      <p style="margin-top: 12px;">Eles eram a <strong>maioria absoluta</strong>. Representavam 98% da população.</p>
+    </section>
+
+
+    <!-- ============== 30 — votação injusta ============== -->
+    <section class="slide">
+      <p>Mas o sistema de votação era injusto.</p>
+      <p style="margin-top: 10px;"><strong>Cada estado, um voto.</strong></p>
+      <div class="illu" style="margin: 16px auto; max-width: 240px;">
+        <svg viewBox="0 0 240 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- 3 caixas de votação -->
+          <rect x="20" y="20" width="50" height="50" rx="3"/>
+          <text x="33" y="50" font-family="Georgia" font-size="14" fill="#B5342B" stroke="none">1º</text>
+          <text x="35" y="62" font-family="Georgia" font-size="9" fill="#B5342B" stroke="none">1 voto</text>
+          <rect x="95" y="20" width="50" height="50" rx="3"/>
+          <text x="108" y="50" font-family="Georgia" font-size="14" fill="#B5342B" stroke="none">2º</text>
+          <text x="110" y="62" font-family="Georgia" font-size="9" fill="#B5342B" stroke="none">1 voto</text>
+          <rect x="170" y="20" width="50" height="50" rx="3"/>
+          <text x="183" y="50" font-family="Georgia" font-size="14" fill="#B5342B" stroke="none">3º</text>
+          <text x="185" y="62" font-family="Georgia" font-size="9" fill="#B5342B" stroke="none">1 voto</text>
+        </svg>
+      </div>
+      <p>Clero + Nobreza ganhavam sempre. <strong>2 contra 1</strong>.</p>
+    </section>
+
+
+    <!-- ============== 31 — Assembleia Nacional ============== -->
+    <section class="slide">
+      <p>O 3º Estado exigiu: voto <strong>por cabeça</strong>. Cada deputado, um voto.</p>
+      <p style="margin-top: 10px;">O rei recusou.</p>
+      <p style="margin-top: 10px;">Os burgueses se irritaram.</p>
+      <p class="big" style="margin-top: 14px;">Junho de 1789. Fizeram uma coisa ousada.</p>
+      <p style="margin-top: 14px;">Se separaram. Foram pra outra sala. E se autoproclamaram:</p>
+      <p class="big" style="margin-top: 10px; color: var(--accent);">Assembleia Nacional.</p>
+    </section>
+
+
+    <!-- ============== 32 — quadra de péla ============== -->
+    <section class="slide">
+      <p>"Nós representamos a nação. Nós é que vamos fazer Constituição. Vocês fiquem aí com seu rei."</p>
+      <p style="margin-top: 14px;">Foi um <strong>golpe institucional</strong>. Escandaloso pra época.</p>
+      <p style="margin-top: 12px;">O rei mandou trancar a sala onde eles se reuniam.</p>
+      <p style="margin-top: 12px;">Eles invadiram uma quadra coberta de jogo de péla — um tipo de tênis da época — e fizeram o famoso:</p>
+      <p class="big" style="margin-top: 12px; color: var(--accent);">Juramento do Jogo da Péla.</p>
+      <p style="margin-top: 10px;">Juraram que não iam se separar até dar uma Constituição pra França.</p>
+    </section>
+
+
+    <!-- ============== 33 — Bastilha intro ============== -->
+    <section class="slide">
+      <p>O rei, indeciso como sempre, hesitou.</p>
+      <p style="margin-top: 12px;">Em vez de prender todo mundo, <strong>recuou</strong>.</p>
+      <p style="margin-top: 12px;">E começou a movimentar tropas suíças em volta de Paris.</p>
+      <p style="margin-top: 12px;">O povo de Paris ficou <strong>apavorado</strong>.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent);">Boato: o rei vai mandar massacrar a Assembleia.</p>
+    </section>
+
+
+    <!-- ============== 34 — 14 de julho ============== -->
+    <section class="slide">
+      <div class="eyebrow">14 de julho de 1789</div>
+      <h2>O evento mais simbólico da <em>história moderna</em>.</h2>
+      <div class="illu" style="margin-top: 18px; max-width: 240px;">
+        <svg viewBox="0 0 240 140" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- Bastilha torres -->
+          <rect x="50" y="50" width="30" height="80"/>
+          <path d="M45 50 L85 50 L80 45 L50 45 Z"/>
+          <path d="M50 45 L50 40 M58 45 L58 40 M66 45 L66 40 M74 45 L74 40 M82 45 L82 40"/>
+          <rect x="100" y="40" width="40" height="90"/>
+          <path d="M95 40 L145 40 L140 35 L100 35 Z"/>
+          <path d="M100 35 L100 30 M110 35 L110 30 M120 35 L120 30 M130 35 L130 30 M140 35 L140 30"/>
+          <rect x="160" y="50" width="30" height="80"/>
+          <path d="M155 50 L195 50 L190 45 L160 45 Z"/>
+          <path d="M160 45 L160 40 M168 45 L168 40 M176 45 L176 40 M184 45 L184 40 M192 45 L192 40"/>
+          <!-- chão -->
+          <path d="M30 130 L210 130"/>
+          <!-- bandeira em cima -->
+          <path d="M120 30 L120 15"/>
+          <path d="M120 15 L132 18 L120 22"/>
+        </svg>
+      </div>
+      <p class="big">O povo de Paris invadiu a Bastilha.</p>
+    </section>
+
+
+    <!-- ============== 35 — o que era a Bastilha ============== -->
+    <section class="slide">
+      <p>A Bastilha era uma <strong>fortaleza-prisão</strong> no centro de Paris.</p>
+      <p style="margin-top: 12px;">Símbolo do poder absoluto do rei.</p>
+      <p style="margin-top: 12px;">Era ali que iam parar os presos políticos, os inimigos do trono, os críticos do regime.</p>
+    </section>
+
+
+    <!-- ============== 36 — só 7 presos ============== -->
+    <section class="slide">
+      <p>Quando o povo invadiu, descobriu que tinha…</p>
+      <div style="text-align: center; margin: 22px 0;">
+        <div class="number" style="font-size: 88px;">7</div>
+        <p class="label" style="margin-top: 4px;">presos lá dentro</p>
+      </div>
+      <p>Sete. A Bastilha já era praticamente desativada.</p>
+      <p class="big" style="margin-top: 12px;">Mas isso não importava.</p>
+      <p style="margin-top: 8px;">O que importava era o <strong>símbolo</strong>.</p>
+    </section>
+
+
+    <!-- ============== 37 — a cena ============== -->
+    <section class="slide">
+      <p>Imagina a cena.</p>
+      <p style="margin-top: 12px;">Uma massa de gente. Com fome. Com raiva. Com medo.</p>
+      <p style="margin-top: 8px;">Invadindo a maior fortaleza de Paris. Dominando. Soltando os presos.</p>
+      <p style="margin-top: 12px;">Decapitando o comandante.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent); font-size: 18px;">E colocando a cabeça dele numa lança pra andar pelas ruas.</p>
+      <p style="margin-top: 12px;">Foi violento. Catártico. Sobretudo <strong>simbólico</strong>.</p>
+    </section>
+
+
+    <!-- ============== 38 — 14 julho feriado ============== -->
+    <section class="slide">
+      <p>14 de julho virou <strong>feriado nacional</strong> francês até hoje.</p>
+      <div class="flag-stripes">
+        <div class="b"></div><div class="w"></div><div class="r"></div>
+      </div>
+      <p>Equivalente francês do 4 de julho americano.</p>
+      <p style="margin-top: 10px;">Marca o dia em que o povo, literalmente, derrubou um símbolo do poder absoluto.</p>
+    </section>
+
+
+    <!-- ============== 39 — Grande Medo ============== -->
+    <section class="slide">
+      <div class="eyebrow">No campo</div>
+      <p>Os camponeses, ouvindo a notícia, começaram a:</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Invadir os castelos dos nobres.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Queimar documentos de dívidas feudais.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Em alguns casos: <strong>matar os nobres</strong>.</div>
+      </div>
+      <p style="margin-top: 14px;">Esse período tem nome:</p>
+      <p class="big" style="margin-top: 8px; color: var(--accent); font-style: italic;">"O Grande Medo".</p>
+    </section>
+
+
+    <!-- ============== 40 — 4 agosto ============== -->
+    <section class="slide">
+      <p><strong>4 de agosto de 1789.</strong></p>
+      <p style="margin-top: 12px;">A Assembleia Nacional, pressionada, votou o fim dos privilégios feudais.</p>
+      <p class="big" style="margin-top: 14px;">Em <em>uma noite</em>…</p>
+      <p style="margin-top: 8px;">…mil anos de feudalismo foram declarados abolidos.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent);">Só por decreto.</p>
+    </section>
+
+
+    <!-- ============== 41 — Declaração ============== -->
+    <section class="slide">
+      <p><strong>26 de agosto de 1789.</strong></p>
+      <p style="margin-top: 12px;">A Assembleia aprovou a:</p>
+      <p class="big" style="margin-top: 10px; color: var(--accent);">Declaração dos Direitos do Homem e do Cidadão.</p>
+      <p style="margin-top: 12px;">17 artigos. O primeiro é histórico:</p>
+      <p class="quote" style="margin-top: 12px;">"Os homens nascem e permanecem livres e iguais em direitos."</p>
+    </section>
+
+
+    <!-- ============== 42 — a bomba ============== -->
+    <section class="slide">
+      <p>Pensa no tamanho dessa frase.</p>
+      <p style="margin-top: 12px;">Numa sociedade que, <strong>3 meses antes</strong>, era dividida por castas hereditárias…</p>
+      <p style="margin-top: 12px;">…alguém escrever que <strong>todos os homens nascem iguais</strong> é uma bomba.</p>
+      <p class="big" style="margin-top: 14px;">É Locke, Rousseau e Voltaire condensados num artigo só.</p>
+    </section>
+
+
+    <!-- ============== 43 — eco da Declaração ============== -->
+    <section class="slide">
+      <p>A Declaração de 1789, junto com a Declaração de Independência americana de 1776, é:</p>
+      <div style="margin-top: 14px; padding: 16px; background: var(--paper); border-radius: 12px; border-left: 3px solid var(--accent);">
+        <p style="font-family: var(--serif); font-size: 17px; font-style: italic;">o documento fundador dos direitos humanos modernos.</p>
+      </div>
+      <p style="margin-top: 14px;">Quando a ONU criar a Declaração Universal dos Direitos Humanos em <strong>1948</strong>, vai citar diretamente esses textos.</p>
+    </section>
+
+
+    <!-- ============== 44 — fases intro ============== -->
+    <section class="slide">
+      <div class="eyebrow">Daqui pra frente</div>
+      <p>A Revolução vai entrar em <strong>fases</strong>.</p>
+      <p style="margin-top: 12px;">Não foi um evento. Foi <strong>vários</strong>.</p>
+      <p class="big" style="margin-top: 12px;">10 anos de virada, contravirada, reviravolta.</p>
+    </section>
+
+
+    <!-- ============== 45 — Fase 1 ============== -->
+    <section class="slide">
+      <span class="stamp">Fase 1</span>
+      <h2 style="margin-top: 14px;">Monarquia constitucional.</h2>
+      <p style="margin-top: 4px; color: var(--ink-soft); font-style: italic;">1789–1792</p>
+      <p style="margin-top: 16px;">Ideia inicial dos revolucionários moderados: <strong>não acabar com a monarquia</strong>. Só limitá-la.</p>
+      <p style="margin-top: 10px;">Como na Inglaterra. Rei reina, mas não governa.</p>
+      <p style="margin-top: 10px;">Em 1791, foi aprovada a <strong>primeira Constituição da França</strong>. Luís XVI mantido como rei, com poderes limitados.</p>
+    </section>
+
+
+    <!-- ============== 46 — fuga de Varennes ============== -->
+    <section class="slide">
+      <p>E aí o rei fez uma coisa que <strong>selou o destino dele</strong>.</p>
+      <p class="big" style="margin-top: 14px;">Junho de 1791. Tentou fugir.</p>
+      <div class="illu sm" style="margin: 14px auto;">
+        <svg viewBox="0 0 140 60" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- carruagem fugindo -->
+          <rect x="20" y="20" width="40" height="20" rx="3"/>
+          <circle cx="28" cy="44" r="6"/>
+          <circle cx="52" cy="44" r="6"/>
+          <!-- seta -->
+          <path d="M70 30 L110 30" stroke-dasharray="3 3"/>
+          <path d="M103 25 L110 30 L103 35"/>
+          <!-- coroa -->
+          <path d="M118 25 L118 15 L125 22 L130 12 L135 22 L142 15 L142 25 Z"/>
+        </svg>
+      </div>
+      <p>Disfarçado, com a família, à noite, tentou escapar pra Áustria — terra natal da rainha.</p>
+      <p style="margin-top: 10px;">Pra organizar de lá uma <strong>invasão estrangeira</strong> que restaurasse o absolutismo.</p>
+    </section>
+
+
+    <!-- ============== 47 ============== -->
+    <section class="slide">
+      <p>Foi reconhecido. Capturado numa cidade chamada <strong>Varennes</strong>.</p>
+      <p style="margin-top: 10px;">Trazido de volta a Paris sob escolta.</p>
+      <p class="big" style="margin-top: 14px;">Foi a morte política dele.</p>
+      <p style="margin-top: 14px;">Até ali, muita gente ainda acreditava que dava pra negociar com o rei.</p>
+      <p style="margin-top: 10px;">Depois de Varennes, ficou claro: ele era <strong>traidor</strong>. Tava do lado dos inimigos da Revolução.</p>
+    </section>
+
+
+    <!-- ============== 48 — radicalização ============== -->
+    <section class="slide">
+      <p>E aí, os ânimos radicalizaram.</p>
+      <p style="margin-top: 12px;">Surgiram os <strong>clubes políticos</strong>:</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <div class="label" style="font-size: 10px;">Mais radicais</div>
+          <p style="font-family: var(--serif); font-size: 16px; margin-top: 2px;">Clube dos <em>Jacobinos</em></p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--gold);">
+          <div class="label" style="font-size: 10px;">Mais moderados</div>
+          <p style="font-family: var(--serif); font-size: 16px; margin-top: 2px;">Clube dos <em>Girondinos</em></p>
+        </div>
+      </div>
+      <p style="margin-top: 12px;">E surgiram os <strong>sans-culottes</strong>. O povo pobre de Paris, armado, organizado, faminto. E cada vez mais raivoso.</p>
+    </section>
+
+
+    <!-- ============== 49 — Fase 2 ============== -->
+    <section class="slide">
+      <span class="stamp">Fase 2</span>
+      <h2 style="margin-top: 14px;">Convenção e <em>República</em>.</h2>
+      <p style="margin-top: 4px; color: var(--ink-soft); font-style: italic;">1792–1795</p>
+      <p style="margin-top: 16px;"><strong>Agosto de 1792.</strong></p>
+      <p style="margin-top: 8px;">O povo de Paris e os sans-culottes invadiram o palácio das Tulherias.</p>
+      <p style="margin-top: 8px;">Foi um banho de sangue. A monarquia foi suspensa. O rei foi preso de verdade.</p>
+    </section>
+
+
+    <!-- ============== 50 ============== -->
+    <section class="slide">
+      <p><strong>Setembro de 1792.</strong></p>
+      <p class="big" style="margin-top: 12px;">A França foi proclamada <em>República</em>.</p>
+      <p style="margin-top: 14px;">Pela primeira vez na história francesa.</p>
+      <div style="margin-top: 14px; padding: 16px; background: var(--paper); border-radius: 12px; text-align: center; border-left: 3px solid var(--accent);">
+        <div class="number" style="font-size: 44px;">1.300</div>
+        <p style="font-size: 14px; margin-top: 4px;">anos de monarquia — <strong>encerrados</strong>.</p>
+      </div>
+    </section>
+
+
+    <!-- ============== 51 — execução do rei ============== -->
+    <section class="slide">
+      <p><strong>Janeiro de 1793.</strong></p>
+      <p style="margin-top: 12px;">Luís XVI foi julgado por traição, condenado, e <strong>guilhotinado em praça pública</strong>.</p>
+      <p style="margin-top: 14px;"><strong>Outubro</strong> do mesmo ano, foi a vez de Maria Antonieta.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent);">Cabeça pra dentro do cesto. Em frente a uma multidão.</p>
+    </section>
+
+
+    <!-- ============== 52 — guilhotina pausa ============== -->
+    <section class="slide">
+      <div class="eyebrow">Pausa pra falar dela</div>
+      <h2>A guilhotina.</h2>
+      <div class="illu" style="margin: 16px auto; max-width: 180px;">
+        <svg viewBox="0 0 140 180" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <path d="M30 170 L30 30"/>
+          <path d="M110 170 L110 30"/>
+          <path d="M25 30 L115 30"/>
+          <path d="M30 30 L110 30"/>
+          <path d="M40 50 L100 50 L100 75 L40 75 Z" fill="#B5342B" fill-opacity="0.3"/>
+          <path d="M40 75 L70 88 L100 75"/>
+          <path d="M20 170 L120 170"/>
+          <path d="M55 140 L85 140 L82 160 L58 160 Z"/>
+        </svg>
+      </div>
+      <p>Símbolo da Revolução, junto com a bandeira tricolor.</p>
+    </section>
+
+
+    <!-- ============== 53 — ironia da guilhotina ============== -->
+    <section class="slide">
+      <p>Foi inventada, ironicamente, por um <strong>motivo humanitário</strong>.</p>
+      <p style="margin-top: 12px;">Um médico chamado <em>Joseph-Ignace Guillotin</em> propôs:</p>
+      <p class="quote" style="margin-top: 12px;">Todas as execuções deveriam ser feitas com uma máquina. Rápida, indolor, e <strong>igual pra todo mundo</strong>.</p>
+    </section>
+
+
+    <!-- ============== 54 ============== -->
+    <section class="slide">
+      <p>Antes:</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Nobre → decapitado com espada.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Plebeu → enforcado.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Herético → queimado.</div>
+      </div>
+      <p style="margin-top: 14px;">Cada classe tinha sua morte.</p>
+      <p style="margin-top: 10px;">Guillotin queria <strong>igualar</strong>. Morte democrática.</p>
+      <p class="big" style="margin-top: 14px; color: var(--accent);">Triste ironia.</p>
+      <p style="margin-top: 10px;">A máquina inventada pra ser humanitária virou símbolo do horror em massa.</p>
+    </section>
+
+
+    <!-- ============== 55 — Fase 3 Terror ============== -->
+    <section class="slide">
+      <span class="stamp">Fase 3</span>
+      <h2 style="margin-top: 14px;">O <em>Terror</em>.</h2>
+      <p style="margin-top: 4px; color: var(--ink-soft); font-style: italic;">1793–1794</p>
+      <p style="margin-top: 16px;">Fase mais <strong>sombria</strong> da Revolução.</p>
+      <p style="margin-top: 10px;">E precisa ser entendida com contexto. Não com julgamento fácil.</p>
+    </section>
+
+
+    <!-- ============== 56 — cerco ============== -->
+    <section class="slide">
+      <p>A República, recém-proclamada, tava cercada de problemas.</p>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px;">
+          <div class="label" style="font-size: 10px; margin-bottom: 4px;">Por fora</div>
+          <p style="font-size: 14px;">Áustria, Prússia, Inglaterra, Espanha, Holanda — <strong>todas declararam guerra</strong>.</p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px;">
+          <div class="label" style="font-size: 10px; margin-bottom: 4px;">Por dentro</div>
+          <p style="font-size: 14px;">Contrarrevolução. Camponeses católicos pegando em armas. Cidades inteiras se revoltando.</p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px;">
+          <div class="label" style="font-size: 10px; margin-bottom: 4px;">Em Paris</div>
+          <p style="font-size: 14px;">Fome de novo. Inflação. Crise.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============== 57 — Robespierre ============== -->
+    <section class="slide">
+      <p>Em meio ao caos, um grupo radical tomou o poder. Os <strong>Jacobinos</strong>.</p>
+      <p style="margin-top: 12px;">Liderados por um advogado de 35 anos:</p>
+      <p class="big" style="margin-top: 14px; color: var(--accent);">Maximilien Robespierre.</p>
+      <div style="margin-top: 14px; padding: 14px; background: var(--paper); border-radius: 12px;">
+        <p style="font-size: 14px;">Magro, pálido, austero. Vegetariano.</p>
+        <p style="font-size: 14px; margin-top: 6px;">Sempre impecavelmente vestido.</p>
+        <p style="font-size: 14px; margin-top: 6px;">Com fé <strong>quase religiosa</strong> na Revolução.</p>
+      </div>
+    </section>
+
+
+    <!-- ============== 58 — dois lados ============== -->
+    <section class="slide">
+      <p>Robespierre é um dos personagens mais <strong>complexos</strong> da história.</p>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="padding: 14px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--correct);">
+          <div class="label" style="font-size: 10px;">Pra alguns</div>
+          <p style="font-size: 14px; margin-top: 4px;">Herói da democracia. Defensor radical da igualdade. Mártir da causa popular.</p>
+        </div>
+        <div style="padding: 14px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <div class="label" style="font-size: 10px;">Pra outros</div>
+          <p style="font-size: 14px; margin-top: 4px;">Primeiro ditador moderno. Inventor do terrorismo de Estado.</p>
+        </div>
+      </div>
+      <p style="margin-top: 12px;">Os dois lados têm argumento.</p>
+    </section>
+
+
+    <!-- ============== 59 — Comitê ============== -->
+    <section class="slide">
+      <p>Entre meados de 1793 e julho de 1794, Robespierre e seu <strong>Comitê de Salvação Pública</strong> governaram a França com mão de ferro.</p>
+      <p style="margin-top: 12px;">Sob o argumento de salvar a República dos inimigos:</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Suspenderam a Constituição.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Criaram tribunais revolucionários.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Aprovaram a <strong>Lei dos Suspeitos</strong>.</div>
+      </div>
+      <p style="margin-top: 12px;">Permitia prender qualquer um considerado "inimigo da Revolução". Com base em quase nada.</p>
+    </section>
+
+
+    <!-- ============== 60 — números do Terror ============== -->
+    <section class="slide">
+      <div class="eyebrow">12 meses · números do Terror</div>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="padding: 14px; background: var(--paper); border-radius: 12px; border-left: 3px solid var(--accent);">
+          <div class="number" style="font-size: 38px;">16.500</div>
+          <p style="font-size: 13px; margin-top: 4px;">guilhotinados oficialmente.</p>
+        </div>
+        <div style="padding: 14px; background: var(--paper); border-radius: 12px; border-left: 3px solid var(--accent);">
+          <div class="number" style="font-size: 38px;">25.000</div>
+          <p style="font-size: 13px; margin-top: 4px;">mortos em massacres, prisões, execuções sumárias.</p>
+        </div>
+        <div style="padding: 14px; background: var(--bg-deep); color: var(--paper); border-radius: 12px;">
+          <div class="number" style="font-size: 44px; color: var(--accent-soft);">40.000</div>
+          <p style="font-size: 13px; margin-top: 4px; color: rgba(251,247,239,0.8);">total estimado em <strong>doze meses</strong>.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============== 61 — quem morria ============== -->
+    <section class="slide">
+      <p class="big">E o mais perverso.</p>
+      <p style="margin-top: 14px;">A maioria dos guilhotinados <strong>não era nobre</strong>.</p>
+      <p style="margin-top: 12px;">Era gente do povo:</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Padre que recusou jurar fidelidade à Revolução.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Camponês que reclamou do preço do pão.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Comerciante acusado de estocar.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Político de outro grupo.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Jornalista de outro lado.</div>
+      </div>
+      <p style="margin-top: 12px;">Virou <strong>purga ideológica</strong>. Quem discordava de Robespierre, ia pra fila.</p>
+    </section>
+
+
+    <!-- ============== 62 — Danton ============== -->
+    <section class="slide">
+      <p>No final, Robespierre começou a executar até os <strong>próprios aliados</strong>.</p>
+      <p style="margin-top: 12px;">Quando mandou guilhotinar <strong>Danton</strong> — que tinha sido um dos maiores líderes da Revolução — ficou claro pra todo mundo:</p>
+      <p class="big" style="margin-top: 14px; color: var(--accent);">Se nem Danton tá seguro, ninguém tá.</p>
+    </section>
+
+
+    <!-- ============== 63 — queda de Robespierre ============== -->
+    <section class="slide">
+      <p><strong>Julho de 1794.</strong></p>
+      <p style="margin-top: 12px;">Os outros membros da Convenção, com medo de serem os próximos, deram um golpe.</p>
+      <p style="margin-top: 12px;">Prenderam Robespierre. Julgaram em 24 horas. <strong>Guilhotinaram</strong>.</p>
+      <p class="big" style="margin-top: 14px; color: var(--accent);">Mesma máquina que ele tinha usado pra matar tanta gente.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic;">Engoliu o criador.</p>
+      <p style="margin-top: 14px;">Foi o fim do Terror.</p>
+    </section>
+
+
+    <!-- ============== 64 — Fase 4 ============== -->
+    <section class="slide">
+      <span class="stamp">Fase 4</span>
+      <h2 style="margin-top: 14px;">O <em>Diretório</em>.</h2>
+      <p style="margin-top: 4px; color: var(--ink-soft); font-style: italic;">1795–1799</p>
+      <p style="margin-top: 16px;">Depois do trauma do Terror, a França entrou em fase de <strong>moderação</strong>.</p>
+      <p style="margin-top: 10px;">A burguesia retomou o controle.</p>
+      <p style="margin-top: 10px;">Foi criado um governo de <strong>5 diretores</strong>, sob nova Constituição.</p>
+    </section>
+
+
+    <!-- ============== 65 — governo medíocre ============== -->
+    <section class="slide">
+      <p>Foi um governo medíocre.</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px; color: var(--ink-soft); font-style: italic;">Corrupto.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px; color: var(--ink-soft); font-style: italic;">Indeciso.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px; color: var(--ink-soft); font-style: italic;">Incapaz de resolver os problemas.</div>
+      </div>
+      <p style="margin-top: 14px;">Inflação continuava. Guerra com a Europa continuava.</p>
+      <p style="margin-top: 10px;">Jacobinos agitavam. Monarquistas conspiravam. Era um <strong>vai-não-vai</strong> constante.</p>
+    </section>
+
+
+    <!-- ============== 66 — Napoleão entra ============== -->
+    <section class="slide">
+      <p>Mas, no meio dessa instabilidade…</p>
+      <p style="margin-top: 12px;">…um cara começou a <strong>brilhar</strong>.</p>
+      <div class="illu sm" style="margin: 14px auto;">
+        <svg viewBox="0 0 100 100" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- chapéu bicorne -->
+          <path d="M20 50 Q50 30 80 50 Q70 55 50 55 Q30 55 20 50 Z"/>
+          <!-- cabeça -->
+          <circle cx="50" cy="70" r="14"/>
+        </svg>
+      </div>
+      <p>Um general jovem. Baixinho. De origem corsa.</p>
+      <p style="margin-top: 8px;">Brilhante. Ambicioso. Com uma série de vitórias militares estrondosas.</p>
+      <p class="big" style="margin-top: 12px; color: var(--accent);">Napoleão Bonaparte.</p>
+    </section>
+
+
+    <!-- ============== 67 — golpe ============== -->
+    <section class="slide">
+      <p><strong>9 de novembro de 1799.</strong></p>
+      <p style="margin-top: 6px; color: var(--ink-soft); font-style: italic; font-size: 14px;">(ou 18 de Brumário do ano VIII)</p>
+      <p style="margin-top: 14px;">Napoleão deu um <strong>golpe de Estado</strong>.</p>
+      <p style="margin-top: 10px;">Derrubou o Diretório com apoio do exército. Se autoproclamou <strong>Primeiro Cônsul</strong>.</p>
+      <p style="margin-top: 12px;"><strong>Cinco anos depois</strong>, em 1804…</p>
+      <p class="big" style="margin-top: 10px; color: var(--accent);">…virou Imperador.</p>
+    </function>
+
+
+    <!-- ============== 68 — ironia ============== -->
+    <section class="slide">
+      <p class="big">Imperador.</p>
+      <p style="margin-top: 14px; font-family: var(--serif); font-style: italic; font-size: 22px; color: var(--accent);">Logo a Revolução que tinha começado decapitando rei.</p>
+      <p style="margin-top: 18px;">Aqui termina, formalmente, a Revolução Francesa.</p>
+      <p style="margin-top: 8px;"><strong>1799</strong>. Dez anos depois da Bastilha.</p>
+    </section>
+
+
+    <!-- ============== 69 — sim e não ============== -->
+    <section class="slide">
+      <p>Foi uma volta completa?</p>
+      <p class="big" style="margin-top: 14px;">Sim e não.</p>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="padding: 14px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <span class="label" style="font-size: 10px;">Sim</span>
+          <p style="font-size: 14px; margin-top: 4px;">Napoleão era imperador, ditador, autocrata.</p>
+        </div>
+        <div style="padding: 14px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--correct);">
+          <span class="label" style="font-size: 10px;">Não</span>
+          <p style="font-size: 14px; margin-top: 4px;">Ele <strong>não restaurou</strong> o Antigo Regime. Consolidou as conquistas da Revolução em leis.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============== 70 — Código ============== -->
+    <section class="slide">
+      <p>O <strong>Código Napoleônico</strong>, de 1804, fixou em lei:</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Igualdade jurídica de todos os cidadãos.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Fim dos privilégios de nascimento.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Liberdade religiosa.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Direito de propriedade.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Casamento civil.</div>
+      </div>
+      <p style="margin-top: 12px;">Virou base do direito civil de quase toda a Europa continental e da América Latina.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent);">Inclusive do Brasil.</p>
+    </section>
+
+
+    <!-- ============== 71 — Napoleão espalha ============== -->
+    <section class="slide">
+      <p>Napoleão também espalhou essas reformas <strong>pela força</strong>.</p>
+      <div class="illu" style="margin: 14px auto; max-width: 240px;">
+        <svg viewBox="0 0 240 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- mapa da Europa simplificado -->
+          <path d="M30 50 L60 30 L100 35 L140 25 L180 40 L210 35 L210 60 L180 65 L150 55 L110 65 L70 60 L40 65 Z"/>
+          <circle cx="90" cy="45" r="3" fill="#B5342B"/>
+          <text x="80" y="55" font-family="Georgia" font-size="9" fill="#B5342B" stroke="none">França</text>
+          <circle cx="140" cy="40" r="2"/>
+          <circle cx="170" cy="50" r="2"/>
+          <circle cx="60" cy="50" r="2"/>
+        </svg>
+      </div>
+      <p>Conquistou <strong>meia Europa</strong>. E em cada país conquistado, implantou o Código.</p>
+      <p style="margin-top: 10px;">Levou a Revolução a chicotada pra Espanha, Itália, Alemanha, Holanda.</p>
+    </section>
+
+
+    <!-- ============== 72 — Waterloo ============== -->
+    <section class="slide">
+      <p>Quando foi derrotado, em <strong>1815</strong>, em <em>Waterloo</em>, e as monarquias voltaram…</p>
+      <p class="big" style="margin-top: 14px;">…elas voltaram <em>diferentes</em>.</p>
+      <p style="margin-top: 14px;">Já não dava mais pra voltar atrás.</p>
+      <p style="margin-top: 8px;">As ideias da Revolução tinham <strong>contaminado a Europa inteira</strong>.</p>
+      <p style="margin-top: 10px; font-family: var(--serif); font-style: italic; color: var(--accent);">Não tinha mais como desimplantar.</p>
+    </section>
+
+
+    <!-- ============== 73 — Legados intro ============== -->
+    <section class="slide">
+      <div class="eyebrow">Aqui mora a importância</div>
+      <h2>O que ela <em>mudou</em> no mundo.</h2>
+      <p style="margin-top: 14px;">Mesmo terminando em ditadura. Mesmo com excessos. Mesmo com o Terror.</p>
+      <p style="margin-top: 10px;">A Revolução mudou o mundo de jeitos que a gente ainda vive hoje.</p>
+      <p style="margin-top: 10px; color: var(--ink-soft); font-style: italic;">Cinco legados.</p>
+    </section>
+
+
+    <!-- ============== 74 — Legado 1 ============== -->
+    <section class="slide">
+      <div class="number">01</div>
+      <div class="label" style="margin-top: 6px;">Legado</div>
+      <h2 style="margin-top: 10px;">Fim do Antigo Regime.</h2>
+      <p style="margin-top: 14px;">Não imediatamente. Mas plantou a semente.</p>
+      <p style="margin-top: 12px;">Daqui pra frente, as monarquias absolutistas vão cair, uma por uma.</p>
+      <p style="margin-top: 12px;">Em <strong>1918</strong>, no fim da Primeira Guerra, caem as três últimas grandes:</p>
+      <div style="margin-top: 10px; display: flex; gap: 6px;">
+        <div style="flex: 1; padding: 10px 6px; background: var(--paper); border-radius: 8px; text-align: center; font-family: var(--serif); font-size: 13px;">Alemanha</div>
+        <div style="flex: 1; padding: 10px 6px; background: var(--paper); border-radius: 8px; text-align: center; font-family: var(--serif); font-size: 13px;">Áustria-Hungria</div>
+        <div style="flex: 1; padding: 10px 6px; background: var(--paper); border-radius: 8px; text-align: center; font-family: var(--serif); font-size: 13px;">Rússia</div>
+      </div>
+      <p style="margin-top: 12px; font-size: 14px; font-style: italic; color: var(--ink-soft);">Tudo descendente, no fundo, do gatilho de 1789.</p>
+    </section>
+
+
+    <!-- ============== 75 — Legado 2 ============== -->
+    <section class="slide">
+      <div class="number">02</div>
+      <div class="label" style="margin-top: 6px;">Legado</div>
+      <h2 style="margin-top: 10px;">A cidadania moderna.</h2>
+      <p style="margin-top: 14px;">Antes, você era <strong>súdito</strong>. Pertencia ao rei.</p>
+      <p style="margin-top: 12px;">Depois, você é <strong>cidadão</strong>. Tem direitos.</p>
+      <p class="big" style="margin-top: 14px; color: var(--accent);">O Estado existe pra te servir. Não o contrário.</p>
+      <p style="margin-top: 12px;">Essa virada é a base da <strong>democracia moderna</strong>.</p>
+    </section>
+
+
+    <!-- ============== 76 — Legado 3 ============== -->
+    <section class="slide">
+      <div class="number">03</div>
+      <div class="label" style="margin-top: 6px;">Legado</div>
+      <h2 style="margin-top: 10px;">Esquerda e direita.</h2>
+      <p style="margin-top: 14px;">Literalmente. Os termos vêm da Revolução Francesa.</p>
+      <div class="illu" style="margin: 14px auto; max-width: 240px;">
+        <svg viewBox="0 0 240 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- presidente no meio -->
+          <circle cx="120" cy="40" r="8"/>
+          <text x="105" y="65" font-family="Georgia" font-size="9" fill="#B5342B" stroke="none">presidente</text>
+          <!-- esquerda -->
+          <circle cx="40" cy="30" r="4"/>
+          <circle cx="60" cy="30" r="4"/>
+          <circle cx="80" cy="30" r="4"/>
+          <circle cx="50" cy="50" r="4"/>
+          <circle cx="70" cy="50" r="4"/>
+          <text x="40" y="20" font-family="Georgia" font-size="10" fill="#B5342B" stroke="none" font-style="italic">radicais</text>
+          <!-- direita -->
+          <circle cx="160" cy="30" r="4"/>
+          <circle cx="180" cy="30" r="4"/>
+          <circle cx="200" cy="30" r="4"/>
+          <circle cx="170" cy="50" r="4"/>
+          <circle cx="190" cy="50" r="4"/>
+          <text x="160" y="20" font-family="Georgia" font-size="10" fill="#B5342B" stroke="none" font-style="italic">conservadores</text>
+        </svg>
+      </div>
+      <p>Na Assembleia, deputados a favor de mudanças sentavam à <strong>esquerda</strong>.</p>
+      <p style="margin-top: 8px;">Os que queriam manter o antigo regime, à <strong>direita</strong>.</p>
+      <p style="margin-top: 10px;">Dali até hoje, esses são os termos básicos do debate político. Mais de <strong>200 anos</strong>.</p>
+    </section>
+
+
+    <!-- ============== 77 — Legado 4 ============== -->
+    <section class="slide">
+      <div class="number">04</div>
+      <div class="label" style="margin-top: 6px;">Legado</div>
+      <h2 style="margin-top: 10px;">Nacionalismo.</h2>
+      <p style="margin-top: 14px;">Antes, gente comum não tinha "pátria". Tinha rei.</p>
+      <p style="margin-top: 10px;">Era súdito de Luís, de Carlos, de Maria.</p>
+      <p style="margin-top: 12px;">A Revolução inventou a ideia de <strong>nação</strong>:</p>
+      <div style="margin-top: 10px; padding: 14px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent-2);">
+        <p style="font-size: 14px;">Um <strong>povo francês</strong>. Língua comum. Cultura comum. Bandeira. Hino. Destino coletivo.</p>
+      </div>
+      <p style="margin-top: 12px;">Replicada, essa ideia gera nacionalismos no mundo todo no século 19.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent);">Inclusive no Brasil. Nossa Independência, em 1822, é filha dessa onda.</p>
+    </section>
+
+
+    <!-- ============== 78 — Legado 5 ============== -->
+    <section class="slide">
+      <div class="number">05</div>
+      <div class="label" style="margin-top: 6px;">Legado</div>
+      <h2 style="margin-top: 10px;">O tripé.</h2>
+      <p class="big" style="margin-top: 16px; color: var(--accent);">Liberdade. Igualdade. Fraternidade.</p>
+      <div class="flag-stripes">
+        <div class="b"></div><div class="w"></div><div class="r"></div>
+      </div>
+      <p>Lema criado durante a Revolução. Virou universal.</p>
+      <p style="margin-top: 10px;">Tá em Constituição, hino, discurso, no mundo inteiro.</p>
+      <p style="margin-top: 10px;">É o lema da modernidade democrática.</p>
+    </section>
+
+
+    <!-- ============== 79 — crítica intro ============== -->
+    <section class="slide">
+      <div class="eyebrow">Mas vou ser crítico</div>
+      <h2>Ela também legou coisas <em>problemáticas</em>.</h2>
+      <p style="margin-top: 14px;">Que reverberam até hoje.</p>
+      <p style="margin-top: 8px; color: var(--ink-soft); font-style: italic;">Três delas.</p>
+    </section>
+
+
+    <!-- ============== 80 — Problema 1 ============== -->
+    <section class="slide">
+      <span class="stamp">Problema 1</span>
+      <h2 style="margin-top: 14px;">Violência justificada por <em>utopia</em>.</h2>
+      <p style="margin-top: 14px;">O Terror foi o primeiro grande experimento moderno de <strong>matar gente em massa em nome de uma utopia</strong>.</p>
+      <p style="margin-top: 12px;">Esse modelo, infelizmente, inspirou muitos outros:</p>
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Revolução Russa (1917).</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Revolução Chinesa.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Revolução Cubana.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Khmer Vermelho no Camboja.</div>
+      </div>
+    </section>
+
+
+    <!-- ============== 81 ============== -->
+    <section class="slide">
+      <p>Toda revolução do século 20 que terminou em sangue tem alguma coisa de <strong>descendência francesa</strong>.</p>
+      <p class="quote" style="margin-top: 16px;">A ideia de que dá pra fazer omelete quebrando ovo. E que o fim justifica o meio.</p>
+      <p style="margin-top: 12px;">Ganhou força ali.</p>
+    </section>
+
+
+    <!-- ============== 82 — Problema 2 ============== -->
+    <section class="slide">
+      <span class="stamp">Problema 2</span>
+      <h2 style="margin-top: 14px;">Ditadura como <em>saída</em>.</h2>
+      <p style="margin-top: 14px;">A Revolução começa com ideal democrático e termina com Napoleão imperador.</p>
+      <p style="margin-top: 12px;">Esse padrão se repete:</p>
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Rússia → ideal democrático → Stálin.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Cuba → ideal democrático → Castro por 60 anos.</div>
+      </div>
+      <p class="big" style="margin-top: 14px; color: var(--accent);">Cuidado com quem promete revolução completa.</p>
+    </section>
+
+
+    <!-- ============== 83 — Problema 3 ============== -->
+    <section class="slide">
+      <span class="stamp">Problema 3</span>
+      <h2 style="margin-top: 14px;">Intolerância revolucionária.</h2>
+      <p style="margin-top: 14px;">Na fase jacobina, tentaram descristianizar a França <strong>à força</strong>.</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Fecharam igrejas.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Perseguiram padres.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Renomearam meses, dias da semana.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Criaram uma religião nova: o <em>Culto do Ser Supremo</em>, inventada por Robespierre.</div>
+      </div>
+    </section>
+
+
+    <!-- ============== 84 ============== -->
+    <section class="slide">
+      <p>Não funcionou.</p>
+      <p style="margin-top: 12px;">Mas mostra como movimentos racionalistas levados ao extremo viram <strong>fundamentalismos invertidos</strong>.</p>
+      <p class="quote" style="margin-top: 16px;">Quem combate dogma com dogma, vira o que combate.</p>
+    </section>
+
+
+    <!-- ============== 85 — reflexão pra vida ============== -->
+    <section class="slide">
+      <div class="eyebrow">Reflexão pra vida</div>
+      <h2>Estruturas <em>podres</em>.</h2>
+      <p style="margin-top: 14px;">A Revolução Francesa é um caso clássico de uma coisa que vale pra estratégia, negócio, vida:</p>
+      <p class="quote" style="margin-top: 14px;">Quando estruturas velhas estão podres mas parecem eternas, geralmente desmoronam de um jeito muito mais rápido e violento do que ninguém previa.</p>
+    </section>
+
+
+    <!-- ============== 86 ============== -->
+    <section class="slide">
+      <p>Ninguém, em 1788, imaginava que:</p>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <p style="font-size: 14px;">Em <strong>3 anos</strong>, a monarquia de mil anos estaria de pernas pro ar.</p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <p style="font-size: 14px;">Em <strong>5 anos</strong>, o rei estaria morto.</p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--accent);">
+          <p style="font-size: 14px;">Em <strong>10 anos</strong>, um general da Córsega seria imperador de meia Europa.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============== 87 ============== -->
+    <section class="slide">
+      <p class="big">Estruturas podres parecem fortes…</p>
+      <p style="margin-top: 8px;">…até o dia em que desmoronam.</p>
+      <p style="margin-top: 14px;">E quando desmoronam, é <strong>avalanche</strong>.</p>
+      <p style="margin-top: 12px;">Vale pra império. Empresa. Setor da economia. Carreira. Relacionamento.</p>
+    </section>
+
+
+    <!-- ============== 88 ============== -->
+    <section class="slide">
+      <p>Quem trabalha com estratégia ou investimento precisa ter olho pra ver <strong>podridão atrás do verniz</strong>.</p>
+      <p style="margin-top: 14px;">A maioria só percebe quando o teto cai na cabeça.</p>
+      <p class="big" style="margin-top: 12px; color: var(--accent);">Quem percebe antes, ganha vantagem.</p>
+      <p style="margin-top: 12px; font-family: var(--serif); font-style: italic;">Pensa nisso.</p>
+    </section>
+
+
+    <!-- ============== 89 — paradoxo da liberdade ============== -->
+    <section class="slide">
+      <div class="eyebrow">Outra reflexão</div>
+      <h2>O paradoxo da <em>liberdade</em>.</h2>
+      <p style="margin-top: 14px;">Quando você dá liberdade pra um povo que viveu mil anos sob tirania, ele <strong>não sabe imediatamente o que fazer com ela</strong>.</p>
+      <p style="margin-top: 12px;">Vai aprender. Errar. Exagerar. Oscilar entre extremos.</p>
+      <p style="margin-top: 8px; font-family: var(--serif); font-style: italic; color: var(--accent);">Vai cortar cabeça demais antes de aprender a conversar.</p>
+    </section>
+
+
+    <!-- ============== 90 ============== -->
+    <section class="slide">
+      <p>Isso vale pra:</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Países saindo de ditadura.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Empresas saindo de gestão autoritária.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Qualquer estrutura humana abrindo.</div>
+      </div>
+      <p class="big" style="margin-top: 14px;">Liberdade exige maturidade.</p>
+      <p style="margin-top: 10px;">E maturidade só vem com tempo, prática e tropeço.</p>
+    </section>
+
+
+    <!-- ============== 91 ============== -->
+    <section class="slide">
+      <p>Por isso, transições raramente são limpas.</p>
+      <p style="margin-top: 12px;">Costumam ser caóticas, sangrentas, com avanços e recuos.</p>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px;">
+          <p style="font-size: 14px;">Quem espera transição linear → <strong>vai se decepcionar</strong>.</p>
+        </div>
+        <div style="padding: 12px; background: var(--paper); border-radius: 10px; border-left: 3px solid var(--correct);">
+          <p style="font-size: 14px;">Quem espera caos com tendência geral pra frente → <strong>vai entender melhor o que tá vendo</strong>.</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============== 92 — RESUMÃO 1 ============== -->
+    <section class="slide">
+      <div class="eyebrow">Resumindo</div>
+      <p>A Revolução Francesa: <strong>1789–1799</strong>.</p>
+      <p style="margin-top: 12px;">Causada por:</p>
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Crise financeira.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Fome.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Desigualdade extrema.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Iluminismo circulando.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Rei fraco.</div>
+      </div>
+    </section>
+
+
+    <!-- ============== 93 — RESUMÃO 2 ============== -->
+    <section class="slide">
+      <p>Passou por <strong>quatro fases</strong>:</p>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <div class="phase-card">
+          <div class="ph-num">01</div>
+          <div class="ph-title">Monarquia constitucional</div>
+          <div class="ph-years">1789–1792</div>
+        </div>
+        <div class="phase-card">
+          <div class="ph-num">02</div>
+          <div class="ph-title">República + Terror</div>
+          <div class="ph-years">1792–1795</div>
+        </div>
+        <div class="phase-card">
+          <div class="ph-num">03</div>
+          <div class="ph-title">Diretório moderado</div>
+          <div class="ph-years">1795–1799</div>
+        </div>
+        <div class="phase-card">
+          <div class="ph-num">04</div>
+          <div class="ph-title">Golpe de Napoleão</div>
+          <div class="ph-years">1799</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============== 94 — RESUMÃO 3 ============== -->
+    <section class="slide">
+      <p>Legou pro mundo:</p>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Cidadania moderna.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Direitos humanos universais.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Separação de poderes consolidada.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Igualdade jurídica.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Esquerda e direita.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Nacionalismo.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">Liberdade-igualdade-fraternidade.</div>
+      </div>
+      <p style="margin-top: 14px;">E inaugurou, formalmente:</p>
+      <p class="big" style="margin-top: 8px; color: var(--accent);">A Idade Contemporânea.</p>
+    </section>
+
+
+    <!-- ============== 95 — gancho próxima ============== -->
+    <section class="slide">
+      <div class="eyebrow">Próxima aula</div>
+      <p>Enquanto a França rolava na lama do Terror e Napoleão galopava pela Europa…</p>
+      <p style="margin-top: 12px;">…do outro lado do Canal da Mancha, na <strong>Inglaterra</strong>, acontecia uma revolução de <em>outro tipo</em>.</p>
+    </section>
+
+
+    <!-- ============== 96 ============== -->
+    <section class="slide">
+      <p>Sem guilhotina. Sem rei decapitado. Sem barricada.</p>
+      <p style="margin-top: 12px;">Mas que, no longo prazo, talvez tenha mudado a vida das pessoas comuns ainda <strong>mais</strong> do que a Revolução Francesa.</p>
+      <div class="illu sm" style="margin: 18px auto;">
+        <svg viewBox="0 0 140 80" class="draw" fill="none" stroke="#B5342B" stroke-width="1.5">
+          <!-- fábrica e chaminés -->
+          <rect x="20" y="40" width="60" height="35"/>
+          <rect x="35" y="25" width="8" height="20"/>
+          <rect x="55" y="20" width="8" height="25"/>
+          <path d="M39 22 Q42 16 39 10 Q42 6 39 2"/>
+          <path d="M59 17 Q62 11 59 5"/>
+          <rect x="85" y="50" width="35" height="25"/>
+          <rect x="95" y="35" width="6" height="15"/>
+        </svg>
+      </div>
+      <p class="big" style="margin-top: 8px;">Uma revolução de <em>máquinas</em>.</p>
+    </section>
+
+
+    <!-- ============== 97 ============== -->
+    <section class="slide">
+      <p>De fábricas. De fumaça. De carvão.</p>
+      <p class="big" style="margin-top: 16px; color: var(--accent);">A Revolução Industrial.</p>
+      <p style="margin-top: 16px;">Foi ela que inventou:</p>
+      <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">O mundo do trabalho moderno.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">A cidade grande.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">A classe operária.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">A produção em massa.</div>
+        <div style="padding: 10px 14px; background: var(--paper); border-radius: 8px; font-size: 14px;">O capitalismo industrial.</div>
+      </div>
+      <p style="margin-top: 12px; font-family: var(--serif); font-style: italic; color: var(--ink-soft);">Mas isso é papo da próxima aula. Até lá.</p>
+    </section>
+
+
+    <!-- ============== 98 — INTRO QUIZ ============== -->
+    <section class="slide quiz-intro">
+      <div class="quiz-icon">?</div>
+      <div class="eyebrow" style="text-align: center;">Hora do quiz</div>
+      <h2>Bora ver o que ficou.</h2>
+      <p style="margin-top: 14px;">Seis perguntas rápidas.<br>Se errar, eu te explico na hora.</p>
+    </section>
+
+
+    <!-- ============== 99 — QUIZ 1 ============== -->
+    <section class="slide" data-quiz="1">
+      <div class="question-num">Pergunta 1 de 6</div>
+      <div class="question">Como era dividida a sociedade francesa no Antigo Regime?</div>
+      <div class="options">
+        <button class="option" data-correct="false" data-explain="Não. Não eram classes econômicas, eram castas sociais fechadas — você nascia numa e morria nela.">
+          <span class="letter">A</span><span>Em ricos, classe média e pobres.</span>
+        </button>
+        <button class="option" data-correct="true" data-explain="">
+          <span class="letter">B</span><span>Em três estados: clero, nobreza e todo o resto — sendo que 2% tinham os privilégios e 98% pagavam a conta.</span>
+        </button>
+        <button class="option" data-correct="false" data-explain="Não. Essa divisão (campo/cidade) existia, mas não era a estrutura legal da sociedade. A divisão oficial era em três estados.">
+          <span class="letter">C</span><span>Em camponeses e moradores da cidade.</span>
+        </button>
+      </div>
+      <div class="feedback right" data-fb="right"><span class="head">Mandou bem.</span>Isso. Três estados: <strong>clero, nobreza e "todo o resto"</strong>. Os dois primeiros não pagavam imposto e tinham todos os privilégios. O terceiro — 25 milhões de pessoas — segurava o país nas costas.</div>
+      <div class="feedback miss" data-fb="miss"><span class="head">Quase.</span><span data-explain-text></span><br><br><strong>A certa é a B.</strong> Eram três estados (castas): clero, nobreza, terceiro estado. 2% tinham privilégios, 98% pagavam tudo.</div>
+    </section>
+
+
+    <!-- ============== 100 — QUIZ 2 ============== -->
+    <section class="slide" data-quiz="2">
+      <div class="question-num">Pergunta 2 de 6</div>
+      <div class="question">O que aconteceu no dia 14 de julho de 1789?</div>
+      <div class="options">
+        <button class="option" data-correct="false" data-explain="Não. O rei só foi guilhotinado em janeiro de 1793. Em julho de 1789, ele ainda estava no trono.">
+          <span class="letter">A</span><span>O rei Luís XVI foi guilhotinado.</span>
+        </button>
+        <button class="option" data-correct="false" data-explain="Não. A Declaração foi aprovada em 26 de agosto de 1789, depois da Bastilha.">
+          <span class="letter">B</span><span>Foi aprovada a Declaração dos Direitos do Homem.</span>
+        </button>
+        <button class="option" data-correct="true" data-explain="">
+          <span class="letter">C</span><span>O povo de Paris invadiu a Bastilha — símbolo do poder absoluto do rei.</span>
+        </button>
+      </div>
+      <div class="feedback right" data-fb="right"><span class="head">Boa.</span>Isso. <strong>Queda da Bastilha</strong>. Tinha só 7 presos lá dentro, mas o símbolo foi gigante. Virou feriado nacional francês até hoje.</div>
+      <div class="feedback miss" data-fb="miss"><span class="head">Não foi.</span><span data-explain-text></span><br><br><strong>A certa é a C.</strong> 14 de julho = Queda da Bastilha. O evento mais simbólico da Revolução.</div>
+    </section>
+
+
+    <!-- ============== 101 — QUIZ 3 ============== -->
+    <section class="slide" data-quiz="3">
+      <div class="question-num">Pergunta 3 de 6</div>
+      <div class="question">Qual era o problema da guilhotina, na intenção original do inventor?</div>
+      <div class="options">
+        <button class="option" data-correct="false" data-explain="Não. Pelo contrário — Guillotin queria uma execução RÁPIDA, não dolorosa.">
+          <span class="letter">A</span><span>Era uma máquina propositalmente dolorosa, pra punir mais.</span>
+        </button>
+        <button class="option" data-correct="true" data-explain="">
+          <span class="letter">B</span><span>Foi inventada por motivo humanitário — pra que toda execução fosse rápida, indolor e igual pra todos. Virou símbolo do horror em massa.</span>
+        </button>
+        <button class="option" data-correct="false" data-explain="Não. A guilhotina é da Revolução Francesa, não da Idade Média. Antes dela, nobre era decapitado com espada, plebeu era enforcado.">
+          <span class="letter">C</span><span>Existia desde a Idade Média e era usada só pra nobres.</span>
+        </button>
+      </div>
+      <div class="feedback right" data-fb="right"><span class="head">Exato.</span>Isso. Joseph-Ignace <strong>Guillotin</strong> queria <em>morte democrática</em> — antes, cada classe tinha sua forma de execução. A máquina humanitária virou símbolo do Terror.</div>
+      <div class="feedback miss" data-fb="miss"><span class="head">Não.</span><span data-explain-text></span><br><br><strong>A certa é a B.</strong> A ironia da história: a máquina foi criada pra ser humanitária e igualitária. Virou símbolo do horror.</div>
+    </section>
+
+
+    <!-- ============== 102 — QUIZ 4 ============== -->
+    <section class="slide" data-quiz="4">
+      <div class="question-num">Pergunta 4 de 6</div>
+      <div class="question">O que foi o Terror, liderado por Robespierre?</div>
+      <div class="options">
+        <button class="option" data-correct="false" data-explain="Não. O Terror foi o oposto disso. Foi um regime de exceção autoritário, com Constituição suspensa.">
+          <span class="letter">A</span><span>Uma fase de mais liberdade, com Constituição reforçada.</span>
+        </button>
+        <button class="option" data-correct="false" data-explain="Não. A grande maioria dos guilhotinados era gente do povo — padres, camponeses, comerciantes, jornalistas. Virou purga ideológica.">
+          <span class="letter">B</span><span>Uma fase em que só nobres e reis foram executados.</span>
+        </button>
+        <button class="option" data-correct="true" data-explain="">
+          <span class="letter">C</span><span>Um regime de exceção que executou cerca de 40 mil pessoas em 12 meses — a maioria gente do povo.</span>
+        </button>
+      </div>
+      <div class="feedback right" data-fb="right"><span class="head">Mandou bem.</span>Isso. <strong>16.500 guilhotinados oficiais + 25 mil mortos extrajudiciais</strong>. Suspensão de Constituição, Lei dos Suspeitos, purga ideológica. Quem discordasse de Robespierre, ia pra fila.</div>
+      <div class="feedback miss" data-fb="miss"><span class="head">Não foi isso.</span><span data-explain-text></span><br><br><strong>A certa é a C.</strong> O Terror foi a fase mais sombria da Revolução. ~40 mil mortos em 12 meses. E o mais perverso: a maioria não era nobre, era povo.</div>
+    </section>
+
+
+    <!-- ============== 103 — QUIZ 5 ============== -->
+    <section class="slide" data-quiz="5">
+      <div class="question-num">Pergunta 5 de 6</div>
+      <div class="question">Como a Revolução Francesa termina, em 1799?</div>
+      <div class="options">
+        <button class="option" data-correct="false" data-explain="Não. A monarquia foi abolida em 1792. Os Bourbons só voltariam (brevemente) em 1815, depois de Napoleão.">
+          <span class="letter">A</span><span>Com a volta da monarquia Bourbon ao poder.</span>
+        </button>
+        <button class="option" data-correct="true" data-explain="">
+          <span class="letter">B</span><span>Com um golpe de Estado de Napoleão Bonaparte, que depois vira Imperador — irônico, já que a Revolução começou decapitando o rei.</span>
+        </button>
+        <button class="option" data-correct="false" data-explain="Não. A República foi proclamada em 1792 — mas em 1799 ela termina, justamente com o golpe de Napoleão.">
+          <span class="letter">C</span><span>Com a consolidação definitiva da República democrática.</span>
+        </button>
+      </div>
+      <div class="feedback right" data-fb="right"><span class="head">Boa.</span>Isso. <strong>18 de Brumário (9 de novembro de 1799)</strong> — golpe de Napoleão. Cinco anos depois, ele vira Imperador. A Revolução que começou cortando a cabeça do rei termina coroando outro autocrata.</div>
+      <div class="feedback miss" data-fb="miss"><span class="head">Não foi.</span><span data-explain-text></span><br><br><strong>A certa é a B.</strong> Termina com o golpe de Napoleão em 1799. Cinco anos depois ele vira Imperador. Padrão clássico: revolução democrática que termina em concentração de poder.</div>
+    </section>
+
+
+    <!-- ============== 104 — QUIZ 6 ============== -->
+    <section class="slide" data-quiz="6">
+      <div class="question-num">Pergunta 6 de 6</div>
+      <div class="question">Por que a Revolução Francesa é considerada o marco do início da Idade Contemporânea?</div>
+      <div class="options">
+        <button class="option" data-correct="false" data-explain="Não. A Revolução, na verdade, terminou em ditadura militar (Napoleão). O motivo é outro — o que ela mudou estruturalmente.">
+          <span class="letter">A</span><span>Porque foi a revolução com menos violência e mais democracia.</span>
+        </button>
+        <button class="option" data-correct="false" data-explain="Não. A guilhotina é só símbolo — não é razão histórica. A importância é estrutural.">
+          <span class="letter">B</span><span>Porque inventou a guilhotina, a máquina mais moderna da época.</span>
+        </button>
+        <button class="option" data-correct="true" data-explain="">
+          <span class="letter">C</span><span>Porque destruiu o Antigo Regime e inventou a cidadania moderna, os direitos humanos, esquerda e direita, e o nacionalismo — base do mundo político atual.</span>
+        </button>
+      </div>
+      <div class="feedback right" data-fb="right"><span class="head">Fechou.</span>Isso. <strong>Ela separa o mundo antigo do mundo dos cidadãos.</strong> Antes: súdito do rei. Depois: cidadão com direitos. O Estado existe pra te servir, não o contrário. Base da democracia moderna.</div>
+      <div class="feedback miss" data-fb="miss"><span class="head">Quase.</span><span data-explain-text></span><br><br><strong>A certa é a C.</strong> O marco está no que ela <em>mudou estruturalmente</em>: cidadania, direitos humanos, esquerda/direita, nacionalismo, fim do Antigo Regime. Tudo isso é base do mundo em que a gente vive.</div>
+    </section>
+
+
+    <!-- ============== 105 — FIM ============== -->
+    <section class="slide end">
+      <div class="eyebrow" style="color: var(--accent-soft);">Acabou</div>
+      <h2>Você sobreviveu à <em>Revolução</em>.</h2>
+      <div class="score" id="finalScore">0/6</div>
+      <p id="finalMsg">Mandou bem.</p>
+      <button class="restart" id="restartBtn">Voltar ao início</button>
+    </section>
+
+
+  </div>
+
+
+  <div class="tap-zone left" id="tapLeft"></div>
+  <div class="tap-zone right" id="tapRight"></div>
+</div>
+
+
+<script>
+(function(){
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
+  let current = 0;
+  let quizScore = 0;
+  let quizAnswered = {};
+
+
+  // Build progress segments
+  for (let i = 0; i < total; i++) {
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    seg.dataset.idx = i;
+    progress.appendChild(seg);
+  }
+  const segs = progress.querySelectorAll('.seg');
+
+
+  function updateProgress() {
+    segs.forEach((s, i) => {
+      s.classList.remove('done', 'current');
+      if (i < current) s.classList.add('done');
+      else if (i === current) s.classList.add('current');
+    });
+    counter.textContent = (current + 1) + ' / ' + total;
+  }
+
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides.forEach((s, i) => {
+      s.classList.remove('active', 'prev');
+      if (i < idx) s.classList.add('prev');
+    });
+    slides[idx].classList.add('active');
+    // Force animation restart
+    slides[idx].querySelectorAll('*').forEach(el => {
+      el.style.animation = 'none';
+      el.offsetHeight;
+      el.style.animation = '';
+    });
+    current = idx;
+    updateProgress();
+  }
+
+
+  function next() { if (current < total - 1) goTo(current + 1); }
+  function prev() { if (current > 0) goTo(current - 1); }
+
+
+  document.getElementById('tapRight').addEventListener('click', next);
+  document.getElementById('tapLeft').addEventListener('click', prev);
+
+
+  // Progress bar interaction
+  let dragging = false;
+  function progressTo(clientX) {
+    const rect = progress.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, x / rect.width));
+    const idx = Math.floor(pct * total);
+    if (idx !== current) goTo(Math.min(idx, total - 1));
+  }
+  progress.addEventListener('pointerdown', e => {
+    dragging = true;
+    progressTo(e.clientX);
+    progress.setPointerCapture(e.pointerId);
+  });
+  progress.addEventListener('pointermove', e => {
+    if (dragging) progressTo(e.clientX);
+  });
+  progress.addEventListener('pointerup', e => {
+    dragging = false;
+    try { progress.releasePointerCapture(e.pointerId); } catch(_) {}
+  });
+
+
+  // Swipe
+  let touchStartX = 0, touchStartY = 0, touchActive = false;
+  document.querySelector('.slides').addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchActive = true;
+  }, {passive: true});
+  document.querySelector('.slides').addEventListener('touchend', e => {
+    if (!touchActive) return;
+    touchActive = false;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) next();
+      else prev();
+    }
+  }, {passive: true});
+
+
+  // Quiz logic
+  document.querySelectorAll('.slide[data-quiz]').forEach(slide => {
+    const qId = slide.dataset.quiz;
+    const opts = slide.querySelectorAll('.option');
+    const fbRight = slide.querySelector('[data-fb="right"]');
+    const fbMiss = slide.querySelector('[data-fb="miss"]');
+    opts.forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (quizAnswered[qId]) return;
+        quizAnswered[qId] = true;
+        const isCorrect = opt.dataset.correct === 'true';
+        opts.forEach(o => {
+          o.classList.add('disabled');
+          if (o.dataset.correct === 'true') o.classList.add('correct');
+        });
+        if (isCorrect) {
+          fbRight.classList.add('show');
+          quizScore++;
+        } else {
+          opt.classList.add('wrong');
+          const explainText = opt.dataset.explain || '';
+          const target = fbMiss.querySelector('[data-explain-text]');
+          if (target) target.textContent = explainText;
+          fbMiss.classList.add('show');
+        }
+      });
+    });
+  });
+
+
+  // End screen
+  function updateEnd() {
+    const finalScore = document.getElementById('finalScore');
+    const finalMsg = document.getElementById('finalMsg');
+    if (finalScore) finalScore.textContent = quizScore + '/6';
+    if (finalMsg) {
+      if (quizScore === 6) finalMsg.textContent = 'Perfeito. Você entendeu o que mudou o mundo moderno.';
+      else if (quizScore >= 4) finalMsg.textContent = 'Mandou bem. A engrenagem da Revolução tá clara pra você.';
+      else if (quizScore >= 2) finalMsg.textContent = 'Tá no caminho. Volta e revê os pontos que escaparam.';
+      else finalMsg.textContent = 'Sem stress. Recomeça e vai com calma — a história compensa.';
+    }
+  }
+
+
+  // Observer to update end screen when reached
+  const endSlide = slides[slides.length - 1];
+  const obs = new MutationObserver(() => {
+    if (endSlide.classList.contains('active')) updateEnd();
+  });
+  obs.observe(endSlide, { attributes: true, attributeFilter: ['class'] });
+
+
+  // Restart
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    quizScore = 0;
+    quizAnswered = {};
+    document.querySelectorAll('.option').forEach(o => {
+      o.classList.remove('disabled', 'correct', 'wrong');
+    });
+    document.querySelectorAll('.feedback').forEach(f => f.classList.remove('show'));
+    goTo(0);
+  });
+
+
+  updateProgress();
+})();
+</script>
+
+
+</body>
+  </html>
